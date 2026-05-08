@@ -2,6 +2,7 @@ import {
   closestCenter,
   DndContext,
   type DragEndEvent,
+  type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -208,7 +209,7 @@ export function ThumbnailRail({
 
   return (
     <ScrollArea className="h-full border-r border-hairline bg-sidebar">
-      <SortableRail pages={pages} onReorder={onReorder}>
+      <SortableRail pages={pages} onReorder={onReorder} onSelect={onSelect}>
         {list}
       </SortableRail>
     </ScrollArea>
@@ -315,10 +316,12 @@ function ThumbContextMenu({
 function SortableRail({
   pages,
   onReorder,
+  onSelect,
   children,
 }: {
   pages: Page[];
   onReorder: (from: number, to: number) => void;
+  onSelect: (index: number) => void;
   children: React.ReactNode;
 }) {
   const sensors = useSensors(
@@ -327,6 +330,11 @@ function SortableRail({
   );
 
   const items = pages.map((_, i) => i + 1);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const i = (event.active.id as number) - 1;
+    if (i >= 0) onSelect(i);
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -338,7 +346,12 @@ function SortableRail({
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {children}
       </SortableContext>
